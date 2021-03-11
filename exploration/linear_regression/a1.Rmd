@@ -10,69 +10,21 @@ library(ggplot2)
 
 
 ```{r}
-# Answer to rq1.1.
-manhattan2020 <- read.csv("2020_manhattan.csv")
-manhattan2019 <- read.csv("2019_manhattan.csv")
-brooklyn2020 <- read.csv("2020_brooklyn.csv")
-brooklyn2019 <- read.csv("2019_brooklyn.csv")
+df <- read.csv("SpotifyFeaturesPreprocessed.csv")
 ```
 
-Answer to rq1.2.
-Null hypothesis: average housing prices in both boroughs in 2020 will be the same or greater than the prices in 2019
-Alternate hypothesis: average housing prices in both boroughs in 2020 will be lower than the prices in 2019
 
 ```{r}
-# Answer to rq1.3.
-# A 2-sample t-test was performed, as the x values (year) are categorical
-manhattan2020prices = as.numeric(gsub(",","",manhattan2020$SALE.PRICE))
-manhattan2019prices = as.numeric(gsub(",","",manhattan2019$SALE.PRICE))
-brooklyn2020prices = as.numeric(gsub(",","",brooklyn2020$SALE.PRICE))
-brooklyn2019prices = as.numeric(gsub(",","",brooklyn2019$SALE.PRICE))
-
-manhattanTTest = t.test(manhattan2019prices, manhattan2020prices, var.equal = TRUE)
-brooklynTTest = t.test(brooklyn2019prices, brooklyn2020prices, var.equal = TRUE)
-
-plot(manhattanTTest$estimate)
-plot(brooklynTTest$estimate)
-```
-
-Answer to rq1.4:
-Notice that in both plots, the average housing prices in 2020 (represented by index 2) are lower than the average housing prices in 2019 (index 1). This disproves the null hypothesis.
-
-```{r}
-#Answer to rq2.1 & rq2.2 (data preprocessing)
-# divide datasets into training and testing
-# preprocessing: select numerical columns likely to predict price, drop entries with $0 sale value, change NA # unit values to 0, convert from chrs to nums
-preprocessing <- function(data) {
-  data <- select(data, RESIDENTIAL.UNITS, COMMERCIAL.UNITS, LAND.SQUARE.FEET, GROSS.SQUARE.FEET, YEAR.BUILT, SALE.PRICE)
-  
-  data<-data[!(d=data$SALE.PRICE=="0"),]
-  data[is.na(data)] <- 0
-  data$SALE.PRICE = gsub(",","",data$SALE.PRICE)
-  data$LAND.SQUARE.FEET = gsub(",","",data$LAND.SQUARE.FEET)
-  data$GROSS.SQUARE.FEET = gsub(",","",data$GROSS.SQUARE.FEET)
-  data <- sapply(data, as.numeric)
-
-  return(data)
-}
-
-combinedDataSet <- rbind(preprocessing(manhattan2020), preprocessing(brooklyn2020))
-trainingSize <- floor(0.9 * nrow(combinedDataSet))
+trainingSize <- floor(0.9 * nrow(df))
 set.seed(123)
-trainingIndex <- sample(seq_len(nrow(combinedDataSet)), size = trainingSize)
-training <- combinedDataSet[trainingIndex, ]
-testing <- combinedDataSet[-trainingIndex, ]
+trainingIndex <- sample(seq_len(nrow(df)), size = trainingSize)
+training <- df[trainingIndex, ]
+testing <- df[-trainingIndex, ]
 ```
 
 ```{r}
-#Answer to rq2.2 (statistics to support preprocessing) & rq2.3 find correlation of columns with price, select correlated cols
 
-
-manhattan2020 <- preprocessing(manhattan2020)
-brooklyn2020 <- preprocessing(brooklyn2020)
-
-manhattan2020CorMat = cor(manhattan2020, use = "pairwise.complete.obs")
-brooklyn2020CorMat = cor(brooklyn2020, use = "pairwise.complete.obs")
+spotifyCorMat = cor(df, use = "pairwise.complete.obs")
 
 # get_lower_tri(), get_upper_tri, and plotCorMat() were adapted from:
 # http://www.sthda.com/english/wiki/ggplot2-quick-correlation-matrix-heatmap-r-software-and-data-visualization
@@ -120,55 +72,30 @@ plotCorMat <- function(data, title){
     )
 }
 
-plotCorMat(manhattan2020CorMat, "Manhattan\nCorrelation Matrix")
-plotCorMat(brooklyn2020CorMat, "Brooklyn\nCorrelation Matrix")
+plotCorMat(spotifyCorMat, "Spotify\nCorrelation Matrix")
 
 ```
 
-
-Answer to rq2.4:
-I started by dropping features that I believed would not be useful in predicting sale price.
-I then sanitized this data by removing entries with a $0 sale price, converting to numeric values, and dealing with other empty entries.
-Next I calculated the correlation matrices for both the manhattan and brooklyn datasets.
-In the Manhattan dataset multicolinearity was detected between the Land Square Feet and Gross Square Feet features, which logically makes sense as the value of the Land Square Feet contribute to the value of Gross Square Feet.
-In the Brooklyn dataset multicolinearity was detected between the number of residential units and the Gross Square Feet.
-The features that were most correlated with sale price in  Brooklyn were land square feet and gross square feet.
-The features that were most correlated with sale price in Manhattan were residential units, gross square feet, and commerical units.
-
 ```{r}
-# Answer to 3.1
-# Several regressions were run, with various combinations of the features selected in part 2.
 
-regression1 <- lm(SALE.PRICE ~ LAND.SQUARE.FEET + GROSS.SQUARE.FEET + RESIDENTIAL.UNITS + COMMERCIAL.UNITS, data=as.data.frame(training))
-regression2 <- lm(SALE.PRICE ~ LAND.SQUARE.FEET, data=as.data.frame(training))
-regression3 <- lm(SALE.PRICE ~ LAND.SQUARE.FEET + GROSS.SQUARE.FEET, data=as.data.frame(training))
-regression4 <- lm(SALE.PRICE ~ RESIDENTIAL.UNITS + COMMERCIAL.UNITS, data=as.data.frame(training))
-regression5 <- lm(SALE.PRICE ~ LAND.SQUARE.FEET + RESIDENTIAL.UNITS, data=as.data.frame(training))
+regression <- lm(popularity ~ acousticness + loudness + danceability + energy + instrumentalness + liveness + speechiness, data=as.data.frame(training))
 
-# The RMSE of each regression was calculated. Regression4, which used the residential units and commercial units features, was found to have the lowest RMSE.
 
-cat("regression1 RMSE: $", sqrt(mean(regression1$residuals^2)), "\n")
-cat("regression2 RMSE: $", sqrt(mean(regression2$residuals^2)), "\n")
-cat("regression3 RMSE: $", sqrt(mean(regression3$residuals^2)), "\n")
-cat("regression4 RMSE: $", sqrt(mean(regression4$residuals^2)), "\n")
-cat("regression5 RMSE: $", sqrt(mean(regression5$residuals^2)), "\n")
-cat("regression6 RMSE: $", sqrt(mean(regression6$residuals^2)), "\n")
-cat("regression7 RMSE: $", sqrt(mean(regression7$residuals^2)), "\n")
+cat("regression RMSE: $", sqrt(mean(regression$residuals^2)), "\n")
 
 # fill in any empty values with zeros, and use regression4 to predict on the test set
 
 testing[is.na(testing)] <- 0
-prediction <- predict.lm(regression4, as.data.frame(testing))
+prediction <- predict.lm(regression, as.data.frame(testing))
 
 # calculate RMSE of regression4 on the test set
 
 totalSquaredError <- 0
 for (i in 1:3160) {
-  totalSquaredError <- totalSquaredError + abs(prediction[i] - testing[i, "SALE.PRICE"])^2
+  totalSquaredError <- totalSquaredError + abs(prediction[i] - testing[i, "popularity"])^2
 
 }
 
 testingRMSE <- sqrt(totalSquaredError / 3160)
-cat("regression4 test set RMSE: $", testingRMSE)
+cat("regression test set RMSE: ", testingRMSE)
 ```
-"The RMSE of the regression on the training set was $14793814, whereas the RMSE of the regression on the test set was found to be $14011653. These values are close, with the error on the test set being slightly lower."

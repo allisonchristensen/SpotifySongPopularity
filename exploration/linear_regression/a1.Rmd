@@ -81,14 +81,14 @@ plotCorMat(spotifyCorMat, "Spotify\nCorrelation Matrix")
 regression <- lm(popularity ~ acousticness + loudness + danceability + energy + instrumentalness + liveness + speechiness, data=as.data.frame(training))
 
 
-cat("regression RMSE: $", sqrt(mean(regression$residuals^2)), "\n")
+cat("regression RMSE: ", sqrt(mean(regression$residuals^2)), "\n")
 
-# fill in any empty values with zeros, and use regression4 to predict on the test set
+# fill in any empty values with zeros, and use regression to predict on the test set
 
 testing[is.na(testing)] <- 0
 prediction <- predict.lm(regression, as.data.frame(testing))
 
-# calculate RMSE of regression4 on the test set
+# calculate RMSE of regression on the test set
 
 totalSquaredError <- 0
 for (i in 1:3160) {

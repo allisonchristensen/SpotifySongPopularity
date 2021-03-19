@@ -10,7 +10,7 @@ library(ggplot2)
 
 
 ```{r}
-df <- read.csv("../../data/SpotifyFeaturesPreprocessed.csv")
+df <- read.csv("../../build/data/SpotifyFeaturesPreprocessed.csv")
 ```
 
 

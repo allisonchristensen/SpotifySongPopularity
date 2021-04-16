@@ -36,3 +36,10 @@ To run the code, you can re-run the jupyter notebook called `main.ipynb`, in teh
 
 ![image](https://user-images.githubusercontent.com/36091631/114947889-e8aeaf80-9e1b-11eb-8da4-698b9017af8d.png)
 
+## Contributors
+
+- [beatrospeed](https://github.com/beatrospeed)
+- [oliver-austin](https://github.com/oliver-austin)
+- [allisonchristensen](https://github.com/allisonchristensen)
+- [M4TTRX](https://github.com/M4TTRX)
+- [jen7mal](https://github.com/jen7mal)
